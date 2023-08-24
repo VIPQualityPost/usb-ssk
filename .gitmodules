@@ -1,0 +1,6 @@
+[submodule "lis2ds12-pid"]
+	path = lis2ds12-pid
+	url = https://github.com/STMicroelectronics/lis2ds12-pid.git
+[submodule "firmware/lib/lis2ds12"]
+	path = firmware/lib/lis2ds12
+	url = https://github.com/STMicroelectronics/lis2ds12-pid.git
