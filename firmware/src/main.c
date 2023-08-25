@@ -64,14 +64,14 @@ int main(void)
   lis2ds12_block_data_update_set(&dev_ctx, PROPERTY_ENABLE);
 
   /* Set full scale 2g. */
-  lis2ds12_xl_full_scale_set(&dev_ctx, LIS2DS12_16g);
+  lis2ds12_xl_full_scale_set(&dev_ctx, LIS2DS12_2g);
 
   /* Configure filtering chain. */
   /* Accelerometer - High Pass / Slope path */
   // lis2ds12_xl_hp_path_set(&dev_ctx, LIS2DS12_HP_ON_OUTPUTS);
 
   /* Set Output Data Rate. */
-  lis2ds12_xl_data_rate_set(&dev_ctx, LIS2DS12_XL_ODR_12Hz5_HR);
+  lis2ds12_xl_data_rate_set(&dev_ctx, LIS2DS12_XL_ODR_800Hz_HR);
 
   while (1)
   {
@@ -95,10 +95,13 @@ int main(void)
           data_raw_acceleration[1]);
       acceleration_mg[2] = lis2ds12_from_fs2g_to_mg(
           data_raw_acceleration[2]);
-      sprintf((char *)tx_buffer,
-              "Acceleration [mg]:%4.2f\t%4.2f\t%4.2f\r\n",
-              acceleration_mg[0], acceleration_mg[1], acceleration_mg[2]);
-      tx_com(tx_buffer, strlen((char const *)tx_buffer));
+      // sprintf((char *)tx_buffer,
+      //         "%4.2f\t%4.2f\t%4.2f\r\n",
+      //         acceleration_mg[0], acceleration_mg[1], acceleration_mg[2]);
+      sprintf((char *)tx_buffer, "%4.2f\r\n", acceleration_mg[2]);
+      // tx_com(tx_buffer, strlen((char const *)tx_buffer));
+      CDC_Transmit_FS((uint8_t)acceleration_mg[2], 4);
+
     }
   }
 }
