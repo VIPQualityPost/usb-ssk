@@ -64,14 +64,14 @@ int main(void)
   lis2ds12_block_data_update_set(&dev_ctx, PROPERTY_ENABLE);
 
   /* Set full scale 2g. */
-  lis2ds12_xl_full_scale_set(&dev_ctx, LIS2DS12_2g);
+  lis2ds12_xl_full_scale_set(&dev_ctx, LIS2DS12_16g);
 
   /* Configure filtering chain. */
   /* Accelerometer - High Pass / Slope path */
   // lis2ds12_xl_hp_path_set(&dev_ctx, LIS2DS12_HP_ON_OUTPUTS);
 
   /* Set Output Data Rate. */
-  lis2ds12_xl_data_rate_set(&dev_ctx, LIS2DS12_XL_ODR_800Hz_HR);
+  lis2ds12_xl_data_rate_set(&dev_ctx, LIS2DS12_XL_ODR_12Hz5_HR);
 
   while (1)
   {
