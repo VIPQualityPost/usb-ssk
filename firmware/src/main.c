@@ -17,8 +17,6 @@ static int32_t accel_write(void *handle, uint8_t reg, const uint8_t *bufp,
                            uint16_t len);
 static int32_t accel_read(void *handle, uint8_t reg, uint8_t *bufp,
                           uint16_t len);
-static void tx_com(uint8_t *tx_buffer, uint16_t len);
-static void accel_delay(uint32_t ms);
 
 static int16_t data_raw_acceleration[3];
 static float acceleration_mg[3];
@@ -41,7 +39,7 @@ int main(void)
   dev_ctx.handle = &SENSOR_BUS;
 
   /* Wait sensor boot time */
-  accel_delay(BOOT_TIME);
+  HAL_Delay(BOOT_TIME);
   /* Check device ID */
   lis2ds12_device_id_get(&dev_ctx, &whoamI);
 
@@ -71,7 +69,7 @@ int main(void)
   // lis2ds12_xl_hp_path_set(&dev_ctx, LIS2DS12_HP_ON_OUTPUTS);
 
   /* Set Output Data Rate. */
-  lis2ds12_xl_data_rate_set(&dev_ctx, LIS2DS12_XL_ODR_800Hz_HR);
+  lis2ds12_xl_data_rate_set(&dev_ctx, LIS2DS12_XL_ODR_100Hz_HR);
 
   while (1)
   {
@@ -89,19 +87,17 @@ int main(void)
       /* Read acceleration data. */
       memset(data_raw_acceleration, 0x00, 3 * sizeof(int16_t));
       lis2ds12_acceleration_raw_get(&dev_ctx, data_raw_acceleration);
+
       acceleration_mg[0] = lis2ds12_from_fs2g_to_mg(
           data_raw_acceleration[0]);
       acceleration_mg[1] = lis2ds12_from_fs2g_to_mg(
           data_raw_acceleration[1]);
       acceleration_mg[2] = lis2ds12_from_fs2g_to_mg(
           data_raw_acceleration[2]);
-      // sprintf((char *)tx_buffer,
-      //         "%4.2f\t%4.2f\t%4.2f\r\n",
-      //         acceleration_mg[0], acceleration_mg[1], acceleration_mg[2]);
-      sprintf((char *)tx_buffer, "%4.2f\r\n", acceleration_mg[2]);
-      // tx_com(tx_buffer, strlen((char const *)tx_buffer));
-      CDC_Transmit_FS((uint8_t)acceleration_mg[2], 4);
 
+      memset(tx_buffer, 0x00, 3 * sizeof(float_t));
+      memcpy(&tx_buffer, &acceleration_mg, 3 * sizeof(float_t));
+      CDC_Transmit_FS((char *)tx_buffer, 3 * sizeof(float_t));
     }
   }
 }
@@ -116,16 +112,6 @@ static int32_t accel_read(void *handle, uint8_t reg, uint8_t *bufp, uint16_t len
 {
   HAL_I2C_Mem_Read(handle, LIS2DS12_I2C_ADD_L, reg, I2C_MEMADD_SIZE_8BIT, bufp, len, 1000);
   return 0;
-}
-
-static void tx_com(uint8_t *tx_buffer, uint16_t len)
-{
-  CDC_Transmit_FS(tx_buffer, len);
-}
-
-static void accel_delay(uint32_t ms)
-{
-  HAL_Delay(ms);
 }
 
 /**
