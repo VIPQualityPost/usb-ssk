@@ -1,10 +1,11 @@
 #include "main.h"
 #include "i2c.h"
+#include "gpio.h"
+
+#include "dfu.h"
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
-#include "gpio.h"
-#include "dfu.h"
-#include "lis2ds12_reg.h"
+#include "iis2iclx_reg.h"
 
 #define SENSOR_BUS hi2c1
 #define BOOT_TIME 20 // ms
@@ -12,14 +13,12 @@
 // Function prototypes
 void SystemClock_Config(void);
 
-// LIS2DS12 interface
-static int32_t accel_write(void *handle, uint8_t reg, const uint8_t *bufp,
-                           uint16_t len);
-static int32_t accel_read(void *handle, uint8_t reg, uint8_t *bufp,
-                          uint16_t len);
+//IIS2ICLX driver
+static int32_t platform_write(void *handle, uint8_t reg, const uint8_t *bufp, uint16_t len);
+static int32_t platform_read(void *handle, uint8_t reg, uint8_t *bufp, uint16_t len);
 
-static int16_t data_raw_acceleration[3];
-static float acceleration_mg[3];
+static int16_t data_raw[3];
+static float data_formatted[3];
 static uint8_t whoamI, rst;
 static uint8_t tx_buffer[1000];
 
@@ -34,85 +33,87 @@ int main(void)
   MX_USB_Device_Init();
 
   stmdev_ctx_t dev_ctx;
-  dev_ctx.write_reg = accel_write;
-  dev_ctx.read_reg = accel_read;
+  dev_ctx.write_reg = platform_write;
+  dev_ctx.read_reg = platform_read;
+  dev_ctx.mdelay = HAL_Delay;
   dev_ctx.handle = &SENSOR_BUS;
 
-  /* Wait sensor boot time */
   HAL_Delay(BOOT_TIME);
-  /* Check device ID */
-  lis2ds12_device_id_get(&dev_ctx, &whoamI);
+  iis2iclx_bus_mode_set(&dev_ctx, IIS2ICLX_SEL_BY_HW);
+  iis2iclx_device_id_get(&dev_ctx, &whoamI);
 
-  if (whoamI != LIS2DS12_ID)
+  if (whoamI != IIS2ICLX_ID)
     while (1)
     {
       HAL_GPIO_TogglePin(USER_LED_GPIO_Port, USER_LED_Pin);
-      HAL_Delay(50);
+      HAL_Delay(200);
     }
 
-  /* Restore default configuration */
-  lis2ds12_reset_set(&dev_ctx, PROPERTY_ENABLE);
+  iis2iclx_reset_set(&dev_ctx, PROPERTY_ENABLE);
 
   do
   {
-    lis2ds12_reset_get(&dev_ctx, &rst);
+    iis2iclx_reset_get(&dev_ctx, &rst);
   } while (rst);
 
-  /* Enable Block Data Update. */
-  lis2ds12_block_data_update_set(&dev_ctx, PROPERTY_ENABLE);
+  iis2iclx_block_data_update_set(&dev_ctx, PROPERTY_ENABLE);
+  iis2iclx_xl_data_rate_set(&dev_ctx, IIS2ICLX_ODR_FSM_104Hz);
+  iis2iclx_xl_full_scale_set(&dev_ctx, IIS2ICLX_500mg);
 
-  /* Set full scale 2g. */
-  lis2ds12_xl_full_scale_set(&dev_ctx, LIS2DS12_2g);
-
-  /* Configure filtering chain. */
-  /* Accelerometer - High Pass / Slope path */
-  // lis2ds12_xl_hp_path_set(&dev_ctx, LIS2DS12_HP_ON_OUTPUTS);
-
-  /* Set Output Data Rate. */
-  lis2ds12_xl_data_rate_set(&dev_ctx, LIS2DS12_XL_ODR_100Hz_HR);
+  /* Configure filtering chain(No aux interface)
+   * Accelerometer - LPF1 + LPF2 path
+   */
+  iis2iclx_xl_hp_path_on_out_set(&dev_ctx, IIS2ICLX_LP_ODR_DIV_100);
+  iis2iclx_xl_filter_lp2_set(&dev_ctx, PROPERTY_ENABLE);
 
   while (1)
   {
-    /* Read output only if new value is available. */
-    lis2ds12_reg_t reg;
-    lis2ds12_status_reg_get(&dev_ctx, &reg.status);
+    uint8_t reg_acc, reg_temp;
+
+    iis2iclx_xl_flag_data_ready_get(&dev_ctx, &reg_acc);
+    iis2iclx_temp_flag_data_ready_get(&dev_ctx, &reg_temp);
+    memset(data_raw, 0x00, 3 * sizeof(int16_t));
+
+    if (reg_acc)
+    {
+      iis2iclx_acceleration_raw_get(&dev_ctx, &data_raw[0]);
+      data_formatted[0] = iis2iclx_from_fs500mg_to_mg(data_raw[0]);
+      data_formatted[1] = iis2iclx_from_fs500mg_to_mg(data_raw[1]);
+
+    }
+
+    if(reg_temp){
+      iis2iclx_temperature_raw_get(&dev_ctx, &data_raw[0] + 2);
+      data_formatted[2] = iis2iclx_from_lsb_to_celsius(data_raw[2]);
+
+    }
+
+    if(reg_acc || reg_temp){
+      memset(tx_buffer, 0x00, 3 * sizeof(float_t));
+      memcpy(&tx_buffer, &data_formatted, 3 * sizeof(float_t));
+      CDC_Transmit_FS((uint8_t*)tx_buffer, 3 * sizeof(float_t));
+    }
 
     if (HAL_GPIO_ReadPin(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) == GPIO_PIN_SET)
     {
       jump_to_bootloader();
     }
-
-    if (reg.status.drdy)
-    {
-      /* Read acceleration data. */
-      memset(data_raw_acceleration, 0x00, 3 * sizeof(int16_t));
-      lis2ds12_acceleration_raw_get(&dev_ctx, data_raw_acceleration);
-
-      acceleration_mg[0] = lis2ds12_from_fs2g_to_mg(
-          data_raw_acceleration[0]);
-      acceleration_mg[1] = lis2ds12_from_fs2g_to_mg(
-          data_raw_acceleration[1]);
-      acceleration_mg[2] = lis2ds12_from_fs2g_to_mg(
-          data_raw_acceleration[2]);
-
-      memset(tx_buffer, 0x00, 3 * sizeof(float_t));
-      memcpy(&tx_buffer, &acceleration_mg, 3 * sizeof(float_t));
-      CDC_Transmit_FS((char *)tx_buffer, 3 * sizeof(float_t));
-    }
   }
 }
 
-static int32_t accel_write(void *handle, uint8_t reg, const uint8_t *bufp, uint16_t len)
+static int32_t platform_write(void *handle, uint8_t reg, const uint8_t *bufp, uint16_t len)
 {
-  HAL_I2C_Mem_Write(handle, LIS2DS12_I2C_ADD_L, reg, I2C_MEMADD_SIZE_8BIT, (uint8_t *)bufp, len, 1000);
+  HAL_I2C_Mem_Write(handle, IIS2ICLX_I2C_ADD_L, reg, I2C_MEMADD_SIZE_8BIT, (uint8_t *)bufp, len, 1000);
   return 0;
 }
 
-static int32_t accel_read(void *handle, uint8_t reg, uint8_t *bufp, uint16_t len)
+static int32_t platform_read(void *handle, uint8_t reg, uint8_t *bufp, uint16_t len)
 {
-  HAL_I2C_Mem_Read(handle, LIS2DS12_I2C_ADD_L, reg, I2C_MEMADD_SIZE_8BIT, bufp, len, 1000);
+  HAL_I2C_Mem_Read(handle, IIS2ICLX_I2C_ADD_L, reg, I2C_MEMADD_SIZE_8BIT, bufp, len, 1000);
   return 0;
 }
+
+
 
 /**
  * @brief System Clock Configuration
