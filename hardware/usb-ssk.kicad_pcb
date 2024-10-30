@@ -7,6 +7,13 @@
 		(legacy_teardrops no)
 	)
 	(paper "A4")
+	(title_block
+		(title "USB SSK")
+		(date "2024-10-30")
+		(rev "1.0")
+		(company "asylum research")
+		(comment 1 "matei jordache")
+	)
 	(layers
 		(0 "F.Cu" signal)
 		(1 "In1.Cu" signal)
@@ -12562,7 +12569,7 @@
 		(uuid "81390e6a-016b-4419-a275-7980639afe24")
 	)
 	(gr_line
-		(start 133.1976 105.0036)
+		(start 133.858 105.0036)
 		(end 135.6106 105.0036)
 		(stroke
 			(width 0.3)
@@ -13026,6 +13033,19 @@
 				(bold yes)
 			)
 			(justify left bottom)
+		)
+	)
+	(gr_text "mateijordache"
+		(at 161.3408 97.3328 0)
+		(layer "B.Mask")
+		(uuid "eb0bb315-e148-4492-955c-4c8ba571933c")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.25)
+				(bold yes)
+			)
+			(justify left bottom mirror)
 		)
 	)
 	(gr_text "x"
@@ -14228,6 +14248,172 @@
 				(thickness 0.1)
 			)
 			(justify left top)
+		)
+	)
+	(dimension
+		(type aligned)
+		(layer "Dwgs.User")
+		(uuid "56edaa32-f866-4e39-ac6f-3345d5cb912b")
+		(pts
+			(xy 147.8788 109.8296) (xy 147.8788 94.8296)
+		)
+		(height 25.146)
+		(gr_text "15.0 mm"
+			(at 171.8748 102.3296 90)
+			(layer "Dwgs.User")
+			(uuid "56edaa32-f866-4e39-ac6f-3345d5cb912b")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(format
+			(prefix "")
+			(suffix "")
+			(units 3)
+			(units_format 1)
+			(precision 1)
+		)
+		(style
+			(thickness 0.15)
+			(arrow_length 1.27)
+			(text_position_mode 0)
+			(extension_height 0.58642)
+			(extension_offset 0.5) keep_text_aligned)
+	)
+	(dimension
+		(type aligned)
+		(layer "Dwgs.User")
+		(uuid "61ba9fa2-7faf-4246-970a-945fa82f1286")
+		(pts
+			(xy 147.8788 109.8296) (xy 162.885598 109.8296)
+		)
+		(height -22.3012)
+		(gr_text "15.0 mm"
+			(at 155.382199 86.3784 0)
+			(layer "Dwgs.User")
+			(uuid "61ba9fa2-7faf-4246-970a-945fa82f1286")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(format
+			(prefix "")
+			(suffix "")
+			(units 3)
+			(units_format 1)
+			(precision 1)
+		)
+		(style
+			(thickness 0.15)
+			(arrow_length 1.27)
+			(text_position_mode 0)
+			(extension_height 0.58642)
+			(extension_offset 0.5) keep_text_aligned)
+	)
+	(dimension
+		(type aligned)
+		(layer "Dwgs.User")
+		(uuid "d999e8c8-37dd-4097-9eae-1315565ecc54")
+		(pts
+			(xy 159.885598 94.8296) (xy 159.885598 124.8296)
+		)
+		(height -18.371602)
+		(gr_text "30.0 mm"
+			(at 177.1072 109.8296 90)
+			(layer "Dwgs.User")
+			(uuid "d999e8c8-37dd-4097-9eae-1315565ecc54")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(format
+			(prefix "")
+			(suffix "")
+			(units 3)
+			(units_format 1)
+			(precision 1)
+		)
+		(style
+			(thickness 0.15)
+			(arrow_length 1.27)
+			(text_position_mode 0)
+			(extension_height 0.58642)
+			(extension_offset 0.5) keep_text_aligned)
+	)
+	(dimension
+		(type aligned)
+		(layer "Dwgs.User")
+		(uuid "efcc6efb-7f0d-4809-89ab-0effb6acc468")
+		(pts
+			(xy 132.885598 97.8296) (xy 162.885598 97.8296)
+		)
+		(height -13.7048)
+		(gr_text "30.0 mm"
+			(at 147.885598 82.9748 0)
+			(layer "Dwgs.User")
+			(uuid "efcc6efb-7f0d-4809-89ab-0effb6acc468")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(format
+			(prefix "")
+			(suffix "")
+			(units 3)
+			(units_format 1)
+			(precision 1)
+		)
+		(style
+			(thickness 0.15)
+			(arrow_length 1.27)
+			(text_position_mode 0)
+			(extension_height 0.58642)
+			(extension_offset 0.5) keep_text_aligned)
+	)
+	(dimension
+		(type leader)
+		(layer "Dwgs.User")
+		(uuid "44e91cc0-7f78-48b9-9ab6-480d694dac12")
+		(pts
+			(xy 133.764278 123.95092) (xy 127 130.715198)
+		)
+		(gr_text "4x R 3 mm"
+			(at 114.3 130.715198 0)
+			(layer "Dwgs.User")
+			(uuid "44e91cc0-7f78-48b9-9ab6-480d694dac12")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(format
+			(prefix "")
+			(suffix "")
+			(units 0)
+			(units_format 0)
+			(precision 4)
+			(override_value "4x R 3 mm")
+		)
+		(style
+			(thickness 0.15)
+			(arrow_length 1.27)
+			(text_position_mode 0)
+			(text_frame 0)
+			(extension_offset 0.5)
 		)
 	)
 	(segment
